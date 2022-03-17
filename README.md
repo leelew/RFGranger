@@ -1,8 +1,8 @@
-# Forest-GC
+# Forest-GC (beta)
 
-[Lu Li](https://scholar.google.com.hk/citations?user=2eKsP0gAAAAJ&hl=zh-CN), [Wei Shangguan](https://scholar.google.com/citations?user=sWZZ984AAAAJ&hl=zh-CN), [Yongjiu Dai](https://scholar.google.com/citations?user=6keiTdQAAAAJ&hl=zh-CN).
-
-Southern Marine Science and Engineering Guangdong Laboratory, SYSU
+[Lu Li](https://scholar.google.com.hk/citations?user=2eKsP0gAAAAJ&hl=zh-CN), 
+[Wei Shangguan](https://scholar.google.com/citations?user=sWZZ984AAAAJ&hl=zh-CN), 
+[Yongjiu Dai](https://scholar.google.com/citations?user=6keiTdQAAAAJ&hl=zh-CN).
 
 ### Introduction
 
