@@ -6,7 +6,7 @@
 
 ### Introduction
 
-This repository contains the models described  in the paper "A causal inference model based on Random Forest to identify soil moisture-precipitation feedback". We developed a causal-inference model based on the **Granger causality analysis** and **a nonlinear machine learning model**. This model includes three steps: **nonlinear anomaly decomposition, nonlinear Granger causality analysis, and evaluation of the quality of SM-P feedback**, which eliminates the nonlinear response of **interannual and seasonal variability, the memory effects of climatic factors** and isolates the causal relationship of local SM-P feedback.
+This repository contains the models described in the paper "A causal inference model based on Random Forest to identify soil moisture-precipitation feedback". We developed a causal-inference model based on the **Granger causality analysis** and **a nonlinear machine learning model**. This model includes three steps: **nonlinear anomaly decomposition, nonlinear Granger causality analysis, and evaluation of the quality of SM-P feedback**, which eliminates the nonlinear response of **interannual and seasonal variability, the memory effects of climatic factors** and isolates the causal relationship of local SM-P feedback.
 
 ### Citation
 
