@@ -1,4 +1,4 @@
-# Forest-GC (beta)
+# RF-GC (beta)
 
 [Lu Li](https://scholar.google.com.hk/citations?user=2eKsP0gAAAAJ&hl=zh-CN), 
 [Wei Shangguan](https://scholar.google.com/citations?user=sWZZ984AAAAJ&hl=zh-CN), 
