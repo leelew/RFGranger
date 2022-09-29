@@ -1,4 +1,3 @@
-%% Granger causality test for SM-P feedback
 % granger causality test[1] apply for X as predict variables, Y as target
 % variables to find whether X granger cause Y.
 
@@ -39,4 +38,5 @@ end
 
 if nargout > 1; varagout{1} = R2_full; end 
 if nargout > 2; varagout{2} = R2_baseline; end
+
 end

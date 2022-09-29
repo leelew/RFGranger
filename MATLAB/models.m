@@ -1,147 +1,114 @@
-%% Models
-%
 % This function give several machine learning methods for regression, i.e., 
 % random forest, support vector machine, artificial neural network. and for 
 % these three methods, raise two method to avoid overfitting. i.e., grid search
-% and hybrid feature selection method[1].
+% [1] and hybrid feature selection method[2].
 
 % Example: model = models();
 %          model.run_models(X,Y,fun,type,pl,pnl);
 
 % Referrence:
-% [1]:  
+% [1]:
+% [2]:
 
 % Copyright(c) Li Lu, 2019
 
 function model = models
 
 model.check_terms = @check_terms;
-model.get_param = @get_param;
-model.kfold_order = @kfold_order;
-
 model.run_models = @run_models;
-
 model.RF = @RF;
 model.SVR = @SVR;
 model.ANN = @ANN;
-
 model.grid_search = @grid_search;
 model.select_feature = @select_feature;
-
 model.rank = @rank;
 
 end
 
 function [R2,resid_,varargout] = run_models(X,Y,fun,~,pl,pnl)
-
-% """fit X to Y by machine learning models
+% fit X to Y by machine learning models
 % and adopt two method to handle overfitting.
-    
-% Arguments:
-%    X (N_time,N_feature) -- predict matrix
-%    Y (N_time,1) -- target matrix
-%    fun (integer) -- 1. BP Artificial Neural Network
-%                     2. Support vector machine regression
-%                     3. Random forest
-%                     4. Bias-corrected random forest  
-%    pl/pnl (rational) -- percent of feature selected by 
-%                         linear and nonlinear method.
-%                         (ratio between 0-1)
+% [1] grid search.
+% [2] hybrid feature selection method.
 
-% Returns:
-%    R2 -- 
-%    resid_ -- resid array of selected regression method.
-%    varargout -- if nargin=4, return 'best_param' of grid search.
-%                 if nargin=5 and fun=4 return 'endogeneity'
-  
+% Parameters:
+% __________
+% X/Y: target and predict matrix   
+% fun:
+    % 1. BP Artificial Neural Network
+    % 2. Support vector machine regression
+    % 3. Random forest
+% pl/pnl: percent of feature selected by linear and nonlinear method.
+
+% Attributes:
+% __________
+% R2:
+% resid: resid array of selected regression method.
+% varargout: if nargin==4, return 'best_param' of grid search.
+
 % Example:
 % 1. none 
 %    run_models(X,Y,fun);
 % 2. grid search
 %    run_models(X,Y,fun,~);
 % 3. hybrid feature selection method
-%    run_models(X,Y,fun,~,pl,pnl);  
-% """
+%    run_models(X,Y,fun,~,pl,pnl);
 
 % remove nan row of X,Y
 [X_,Y_,nan_index] = check_terms(X,Y);
-% non all nan array
-if ~isempty(Y_)
-    
-    % if nargin is 3, caculate machine learning models 
-    % with all default parameters
-    if nargin==3
-        % ANN
-        if fun==1
-            [R2,resid] = ANN(X_,Y_);
-        % SVR    
-        elseif fun==2
-            [R2,resid] = SVR(X_,Y_);
-        % RF
-        elseif fun==3
-            [R2,resid] = RF(X_,Y_);
-        end
-        
-    % if nargin is 4, caculate machine learning models
-    % with grid search cv methods
-    elseif nargin==4
-        % get param for grid search cv.
-        param = get_param(fun);
-        % ANN
-        if fun==1
-            [R2,resid,best_param] = ANN(X_,Y_,param);
-        % SVR    
-        elseif fun==2
-            [R2,resid,best_param] = SVR(X_,Y_,param);
-        % RF
-        elseif fun==3
-            [R2,resid,best_param] = RF(X_,Y_,param);
-        end
-        % output best paramters of regression
-        varargout{1} = best_param;
-        
-    % if nargin is 5, caculate machine learning models
-    % with hybrid feature selection methods
-    elseif nargin==5
-        % get feature by hybrid feature selection method.
-        select_index = select_feature(X_,Y_,pl,pnl);
-        % ANN
-        if fun==1
-            [R2,resid] = ANN(X_(:,select_index)',Y_');
-        % SVR    
-        elseif fun==2
-            [R2,resid] = SVR(X_(:,select_index),Y_);
-        % RF
-        elseif fun==3
-            [R2,resid] = RF(X_(:,select_index),Y_);
-        % bias-corrected RF (Ghosal and Hooker, 2018)
-        elseif fun==4
-            [R2,resid,endogenity,~] = bias_corrected_RF(X_(:,select_index),Y_);
-             varargout{1} = endogenity;
-        end
+if length(X_)>0 && length(Y_)>0
+if nargin==3
+    % ANN
+    if fun==1
+        [R2,resid] = ANN(X_,Y_);
+    % SVR    
+    elseif fun==2
+        [R2,resid] = SVR(X_,Y_);
+    % RF
+    elseif fun==3
+        [R2,resid] = RF(X_,Y_);
     end
-    
-    % output residual of regression which implement 
-    % the nan values have been removed in check_terms.
-    resid_ = nan(numel(Y),1);
-    resid_(setdiff(1:numel(Y),nan_index)) = resid;
+elseif nargin==4
+    % get param for grid search cv.
+    param = get_param(fun);
+    % ANN
+    if fun==1
+        [R2,resid,best_param] = ANN(X_,Y_,param);
+    % SVR    
+    elseif fun==2
+        [R2,resid,best_param] = SVR(X_,Y_,param);
+    % RF
+    elseif fun==3
+        [R2,resid,best_param] = RF(X_,Y_,param);
+    end
+    varargout{1} = best_param;
+elseif nargin>4
+    % get feature by hybrid feature selection method.
+    select_index = select_feature(X_,Y_,pl,pnl);
+    endogenity = nan;
+    % ANN
+    if fun==1
+        [R2,resid] = ANN(X_(:,select_index)',Y_');
+    % SVR    
+    elseif fun==2
+        [R2,resid] = SVR(X_(:,select_index),Y_);
+    % RF
+    elseif fun==3
+        [R2,resid] = RF(X_(:,select_index),Y_);
+    %
+    elseif fun==4
+        [R2,resid,endogenity,~] = bias_corrected_RF(X_(:,select_index),Y_);
+    end
+    varargout{1} = endogenity;
 end
+end
+resid_ = nan(numel(Y),1);
+resid_(setdiff(1:numel(Y),nan_index)) = resid;
 end
 
 %%
 function [X,Y,nan_index] = check_terms(X,Y)
-
-% """remove nan rows both in target and predict matrix
-
-% Arguments:
-%    X (N_time,N_feature) -- predict matrix
-%    Y (N_time,1) -- target matrix
-
-% Returns:
-%    X -- 
-%    Y -- matrix with no NaN
-%    nan_index -- index of nan position
-% """
+% remove nan rows both in target and predict matrix
 
 % check y nan terms
 nan_index_Y = find(isnan(Y));
@@ -157,20 +124,17 @@ X(nan_index,:) = []; Y(nan_index) = [];
 end
 
 function param = get_param(fun)
-
-% """get parameter cells of three machine learning methods.
-
-% Returns:
-%   fun: 1. BP Artificial Neural Network (cell)
-%           - hidlaysize1/hidlaysize2 :[15 30 70][10 20 50]
-%           - max epoch:[10 20 40 90]
-%           - transfer function:{'logsig' 'tansig'}
-%           - train option:{'traingd' 'traingda' 'traingdm' 'traingdx'}
-%        2. Support vector machine regression (cell)
-%           - kernel_function : the name of the kerenl that is to be used, this
-%                               variable must be a string    
-%        3. Random forest
-% """ 
+% get parameter cells of three machine learning methods.
+% 1. BP Artificial Neural Network (cell)
+%    - hidlaysize1/hidlaysize2 :[15 30 70][10 20 50]
+%    - max epoch:[10 20 40 90]
+%    - transfer function:{'logsig' 'tansig'}
+%    - train option:{'traingd' 'traingda' 'traingdm' 'traingdx'}
+% 2. Support vector machine regression (cell)
+%    - kernel_function : the name of the kerenl that is to be used, this
+%                        variable must be a string    
+% 3. Random forest
+%    - 
 
 if fun==1
     param = {[15 30],...
@@ -183,24 +147,25 @@ elseif fun==2
 elseif fun==3
     param = {[50,100]};
 end
+
 end
 
 function index = kfold_order(N,fold_number)
+% split data into train set and test set in sequence.
 
-% """split data into train set and test set in sequence.
+% Parameters:
+% __________
+% N: length of data;  
+% fold_number:
 
-% Arguments:
-%    N -- 
-%    fold_number -- 
-
-% Returns:
-%    index -- testset index of specific fold_number, 1,2,...,
-%             fold_number in index means trainset index,
-%             the rest index means testset. thus a index array
-%             could construct fold_number pairs of trainset/testset.
+% Attributes:
+% __________
+% index: testset index of specific fold_number, 1,2,...,
+%        fold_number in index means trainset index,
+%        the rest index means testset. thus a index array
+%        could construct fold_number pairs of trainset/testset.
 
 % ***attention: only for those data couldn't be messed up.
-% """
 
 T = round(N/fold_number);
 %
@@ -215,15 +180,16 @@ end
 
 %% machine learning regression function.
 %
-% Arguments:
-%    X (N_time,N_feature) -- predict matrix
-%    Y (N_time,1) -- target matrix
-%    param -- parameter grid get from func.get_param
-
-% Returns:
-%    R2 -- 
-%    resid -- resid array of selected regression method.
-%    varargout -- return 'best_param' of grid search.
+% Parameters
+% __________
+% X/Y: predict,target variables.
+% param: parameters cell for grid search algorithm
+%
+% Attributes:
+% __________
+% R2: determinate coefficient
+% resid: 
+% varargout: 
 
 % Example:
 % 1. none
@@ -235,9 +201,8 @@ function [R2,resid,varargout] = ANN(X,Y,param)
 
 if nargin==2
     % get net
-    net = feedforwardnet(100);
+    net = feedforwardnet(10);
     net.trainParam.showWindow = 0;
-    net.trainParam.epochs = 150;
     % train
     net = train(net,X',Y');
     % R2 and resid
@@ -248,37 +213,36 @@ else
     [R2,resid,best_param] = grid_search(X,Y,param,1);
      varargout{1} = best_param;
 end
+
 end
 
 function [R2,resid,varargout] = SVR(X,Y,param)
 
 if nargin==2
-    Nfold = 10;
     % fit SVM regression
     svr = fitrsvm(X,Y,...
                   'Standardize',true,...
-                  'kfold',Nfold, ...
-                  'kernelfunction','rbf');
+                  'kernelfunction','gaussian');
     % R2 and resid
     indicator = index;
-    R = nan(Nfold,1);
-    resid_ = nan(numel(Y),Nfold);
-    % 
-    for i = 1:Nfold
-        R(i) = indicator.R2(predict(svr.Trained{i},X),Y);
-        resid_(:,i) = predict(svr.Trained{1},X);
-    end  
-    R2 = mean(R);
-    resid = Y - mean(resid_,Nfold);
+    R2 = indicator.R2(svr.resubPredict,Y);
+    resid = Y-svr.resubPredict;
 else
     [R2,resid,best_param] = grid_search(X,Y,param,2);
      varargout{1} = best_param;
 end
+% plot y and ypredict
+% plot(svr.resubPredict);hold on;plot(Y);
+% legend('Response in Training data','Predicted Response','location','best');
+% Estimate mse and epsilon-insensitive loss by cross-validation
+% cv = crossval(svr);
+% mse = kfoldLoss(cv);
+% epsLoss = kfoldLoss(cv,'lossfun','epsiloninsensitive');
 end
 
 function [R2,resid,varargout] = RF(X,Y,param)
-
 % random forest regression
+
 if nargin==2
     % radom forest class
     NumTrees = 100;
@@ -293,16 +257,22 @@ if nargin==2
     [~,index_descend] = sort(importanceArray,'descend');
     varargout{1} = index_descend;
     % get r2 and resid
-    indicator = index();
     resid = Y - predict(B,X);
+
+    indicator = index();
     R2 = indicator.R2(predict(B,X),Y);
+    RMSE = indicator.RMSE(predict(B,X),Y);
+    MAE = indicator.MAE(predict(B,X),Y);
 else
     [R2,resid,best_param] = grid_search(X,Y,param,3);
     varargout{1} = best_param;
 end
+
 end
 
-function [R2,resid,varargout] = bias_corrected_RF(X,Y)
+%endogeneity
+
+function [R2_,resid,endogenity,pred] = bias_corrected_RF(X,Y)
 
 NumTrees = 100;
 indicator = index;
@@ -314,7 +284,7 @@ B1 = TreeBagger(NumTrees,...
                 'OOBPredictorImportance','on',...
                 'PredictorSelection','curvature'); 
 resid = Y-predict(B1,X);
-R2_ = indicator.R2(predict(B1,X),Y); 
+R2_1 = indicator.R2(predict(B1,X),Y); 
 %
 B2 = TreeBagger(NumTrees,...
                 X,resid,...
@@ -324,20 +294,28 @@ B2 = TreeBagger(NumTrees,...
                 'PredictorSelection','curvature'); 
 pred = predict(B1,X) + predict(B2,X);
 resid = Y-pred;
-R2 = indicator.R2(pred,Y); 
-endogenity = R2_-R2_;
-%
-varargout{1} = endogenity;
-varargout{2} = pred;
+R2_ = indicator.R2(pred,Y); 
+endogenity = R2_-R2_1;
+
 end
 
 %% avoid overfitting methods
-
-% TODO: Need change for cv edition.
-
 function [R2,resid,best_param] = grid_search(X,Y,param,fun)
 
-% """grid search cv for each input machine learning method"""
+% grid search cv for each input machine learning method
+%
+% Parameters:
+% __________
+% param:
+% fun:
+% 1. BP Artificial Neural Network
+% 2. Support vector machine regression
+% 3. Random forest
+%
+% Attributes:
+% __________
+% R2: 
+% best_param:
 
 % ANN
 if fun==1   
@@ -393,12 +371,15 @@ elseif fun==2
             R(i) = indicator.R2(predict(svr.Trained{i},X),Y);
             resid_1(:,i) = predict(svr.Trained{1},X);
         end  
+        R
         mean(R)
         R2_ = mean(R);
+        R2_
         resid_= Y-mean(resid_1,2);
     end
     % get max R2
     [R2,ind] = max(R2_);
+    ind
     best_param = param{ind};
     resid = resid_(:,ind);
 % RF
@@ -425,18 +406,18 @@ end
 end
 
 function select_index = select_feature(x,y,pl,pnl)
+% hybrid feature selection method
+% select useful information(i.e.,feature) by appling pearson corr and random
+% forest in order, and get important array of both linear and nonlinear
+% methods. This method may avoid overfitting problem and handle the caculate
+% efficiency problem of nonlinear machine learning method.
 
-% """hybrid feature selection method
-%    select useful information(i.e.,feature) by appling pearson corr 
-%    and random forest in order, and get important array of both linear 
-%    and nonlinear methods. This method may avoid overfitting problem and 
-%    handle the caculate efficiency problem of nonlinear machine learning method.
-
-% Returns:
-%    select_index -- 
+% Parameters:
+% __________
+% pl/pnl: percent of selected highly linear and nonlinear feature.
 
 % attention: This method is highly ideally, need to be attentioned further.
-% """
+
 
 % use pearson coefficent to select top feature.
 coeff =  abs(corr(x,y));
@@ -456,22 +437,19 @@ end
 
 %%
 function index_rank = rank(X,Y)
+% give the predict and target variables, remove features in predict
+% variables in order, and get the difference of R2 of full and baseline
+% regression, then use this diff represents the impact of the removed variable.
+% and get the rank of the variable.
 
-% """give the predict and target variables, remove features in predict
-%    variables in order, and get the difference of R2 of full and baseline
-%    regression, then use this diff represents the impact of 
-%    the removed variable and get the rank of the variable.
-
-% Procedure:
-%    1. y = a(x,w,e,f...)+b; get corresponding R2; 
-%    2. exclude x,w,e,f,etc,respectively; get R2.
-%    3. contrast these R2 value to find the impact of each terms.
+% y = a(x,w,e,f...)+b; get corresponding R2; 
+% exclude x,w,e,f,etc,respectively; get R2.
+% contrast these R2 value to find the impact of each terms.
 
 % default use random forest regression.
-% """
 
 NumTrees = 100;
-[~,n_feature] = size(X);
+[n_time,n_feature] = size(X);
 % remove nan
 [X,Y] = check_terms(X,Y);
 % get R2 using full variables in X.

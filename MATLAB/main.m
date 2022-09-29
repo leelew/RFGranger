@@ -1,4 +1,3 @@
-%% Main code for specific SM-P feedback
 % This main.m file is apply nonlinear granger causality framework(NGCF) on
 % identify surface soil moisture-precipitation feedback, including both sign 
 % and pattern distribution.
@@ -18,12 +17,12 @@
 % with no P on the previous day, and adding lagged atmospheric pressure as 
 % independent variable. 
 %
-% 4. Calculate S-POCC impacts by dividing the unrestricted model by the re-
+% 4. Use block bootstrap to eliminate endogeneity bias and determine signifi-
+% cance of the S coefficient in the regression.(Need improved)
+%
+% 5. Calculate S-POCC impacts by dividing the unrestricted model by the re-
 % stricted model, plotted against the seasonal S anomaly, and taking the mean 
 % above and below the median of Sclim.
-
-%[We all applied bias-corrected random forest regression method in our research
-% to remove endogeneity in some extent.]
 %
 % Paramters:
 % _________
@@ -61,7 +60,7 @@ model = models();
 terms = get_terms();
 %*** lag_window dayLag = 5:5:25
 %% get independent and dependent terms
-[POCC,S,independ_terms,seasTerm,annualTerm,lagged_P_terms,lagged_press_terms,depend_P_terms] = get_sp_terms...
+[POCC,S,independ_terms,seasTerm,annualTerm,lagged_P_terms,lagged_press_terms] = get_sp_terms...
                                               (P,S,press,...
                                                lon,lat,...
                                                startDate,...
@@ -123,8 +122,6 @@ if nargout>12; varargout{11} = seasTerm; end
 if nargout>13; varargout{12} = annualTerm; end
 if nargout>14; varargout{13} = predU_all; end
 if nargout>15; varargout{14} = predU_baseline; end
-if nargout>16; varargout{15} = depend_P_terms; end
-
 
 end
 
@@ -173,8 +170,6 @@ if nargout>3; varargout{1} = seasTerm; end
 if nargout>4; varargout{2} = annualTerm; end
 if nargout>5; varargout{3} = lagged_P_terms; end
 if nargout>6; varargout{4} = lagged_press_terms; end
-if nargout>7; varargout{5} = depend_P_terms; end
-
 %if nargout>7; varargout{5} = lagged_S_terms; end
 
 
